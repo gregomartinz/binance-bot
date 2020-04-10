@@ -1,9 +1,5 @@
 <h1 align="center">Node Binance Trader NBT</h1>
 
-<h6 align="center">Version 0.2.3</h6>
-
-[![Donate NIM](https://www.nimiq.com/accept-donations/img/donationBtnImg/light-blue-small.svg)](https://safe.nimiq.com/#_request/NQ19KM8LP7SGUMFBNHSL4MV4D8M2ULBS4JSF_)
-
 <img src="nbt_diagram.png">
 
 <h4 align="center">NBT is an open cryptocurrency trading bot development framework for the Binance exchange.</h4>
@@ -141,28 +137,3 @@ const traded_sell_signal = {
 }
 socket.emit("traded_sell_signal", traded_sell_signal)
 ```
-
-
-# Disclaimer 📖
-
-```
-I am not responsible for anything done with this bot.
-You use it at your own risk.
-There are no warranties or guarantees expressed or implied.
-You assume all responsibility and liability.
-```
-
-# Final Notes 🙏
-
-Feel free to fork and add new pull request to this repo.
-If you have any questions/suggestions, or simply you need some help building your trading bot, or mining historical data or improving your strategies using the latest AI/ML algorithms, please feel free to <a href="mailto:herve76@gmail.com" target="_blank">contact me</a>.
-
-If this repo helped you in any way, you can always leave me a BNB tip at 0xf0c499c0accddd52d2f96d8afb6778be0659ee0c
-
-# GETTING IN TOUCH 💬
-
-* **Discord**: [Invite Link](https://discord.gg/4EQrEgj)
-
-<p align="center">
-  <a href="https://discord.gg/4EQrEgj"><img alt="Discord chat" src="Discord_button.png" /></a>
-</p>
