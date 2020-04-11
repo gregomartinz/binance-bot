@@ -9,6 +9,7 @@ const _ = require('lodash')
 const tulind = require('tulind')
 const axios = require('axios')
 const { Client } = require('pg')
+const dotenv = require('dotenv')
 
 const PORT = process.env.PORT || 4000
 const INDEX = path.join(__dirname, 'index.html')
@@ -18,9 +19,6 @@ console.log(`Your port is ${process.env.PORT}`); // 8626
 
 // Postgres conection set up
 const insert_into_db = true
-const pg_connectionString = process.env.POSTGRES_ACCESS
-const pg_connectionSSL = false
-console.log("insert_into_db: ", insert_into_db)
     // to monitor your strategy you can send your buy and sell signals to http://bitcoinvsaltcoins.com
 const send_signal_to_bva = false
 const bva_key = "replace_with_your_BvA_key"
@@ -66,8 +64,8 @@ if (send_signal_to_bva) {
     sendSignalToBVA(bva_key)
 }
 
-if (insert_into_db && pg_connectionString) {
-    connectToDatabase();
+if (insert_into_db) {
+    pg_client = connectToDatabase(pg_client);
 }
 
 //Create server at PORT
@@ -85,7 +83,7 @@ const binance_client = binance()
 async function run() {
     //pairs = await get_pairs()
     //pairs = pairs.slice(0, tracked_max)
-    pairs.unshift('BTCUSDT')
+    pairs.unshift('BTCBUSD')
     pairs.unshift('ETHBTC')
     console.log(" ")
     console.log("Total pairs: " + pairs.length)
@@ -99,17 +97,6 @@ async function run() {
 //////////////////////////////////////////////////////////////////////////////////
 
 const arrAvg = arr => arr.reduce((a, b) => a + b, 0) / arr.length
-
-async function trackData() {
-    console.log('----')
-    for (var i = 0, len = pairs.length; i < len; i++) {
-        console.log('--> ' + pairs[i])
-        if (insert_into_db) await createPgPairTable(pairs[i])
-        await trackPairData(pairs[i])
-        await sleep(wait_time) //let's be safe with the api biance calls
-    }
-    console.log('----')
-}
 
 async function trackPairData(pair) {
 
@@ -372,12 +359,12 @@ async function trackPairData(pair) {
 }
 
 async function createPgPairTable(pair) {
-    return pg_client.query('CREATE TABLE ' + nbt_prefix + pair + '(id bigserial primary key, eventtime bigint NOT NULL, datetime varchar(200), price decimal, candle_open decimal, candle_high decimal, candle_low decimal, candle_close decimal, sum_interv_vols decimal, trades integer, makers_count real, depth_report decimal, sum_bids real, sum_asks real, first_bid_price decimal, first_ask_price decimal, first_bid_qty decimal, first_ask_qty decimal, srsi real)')
+    return pg_client.query('CREATE TABLE IF NOT EXISTS ' + nbt_prefix + pair + '(id bigserial primary key, eventtime bigint NOT NULL, datetime varchar(200), price decimal, candle_open decimal, candle_high decimal, candle_low decimal, candle_close decimal, sum_interv_vols decimal, trades integer, makers_count real, depth_report decimal, sum_bids real, sum_asks real, first_bid_price decimal, first_ask_price decimal, first_bid_qty decimal, first_ask_qty decimal, srsi real)')
         .then(res => {
-            console.log("TABLE " + nbt_prefix + pair + " CREATION SUCCESS")
+            console.log("TABLE " + nbt_prefix + pair + " READY")
         })
         .catch(e => {
-            //console.log(e)
+            console.log(e)
         })
 }
 async function sendSignalToBVA(bva_key) {
@@ -403,13 +390,22 @@ async function sendSignalToBVA(bva_key) {
         // create a socket client connection to send your signals to NBT Hub (http://bitcoinvsaltcoins.com)
     socket_client = io_client('https://nbt-hub.herokuapp.com', { query: "v=" + nbt_vers + "&type=server&key=" + bva_key })
 }
-async function connectToDatabase() {
-    console.log("Connecting to the Postgresql db...")
-    pg_client = new Client({
-        ssl: pg_connectionSSL,
-        connectionString: pg_connectionString,
-    })
-    pg_client.connect()
+
+function connectToDatabase(pg_client) {
+    try {
+        console.log("Connecting to the Postgresql db...")
+        pg_client = new Client({
+            host: process.env.PGHOST,
+            port: process.env.PGPORT,
+            user: process.env.PGUSER,
+            password: process.env.PGPASSWORD,
+        })
+        pg_client.connect()
+        return pg_client
+    } catch (e) {
+        console.log(e)
+    }
+
 }
 async function get_pairs() {
     const exchange_info = await binance_client.exchangeInfo()
@@ -421,6 +417,16 @@ async function get_pairs() {
     })
     const assets = _.intersection(pre_USDT_select, pre_BTC_select)
     return assets.map(asset => asset + 'BTC')
+}
+async function trackData() {
+    console.log('----')
+    for (var i = 0, len = pairs.length; i < len; i++) {
+        console.log('--> ' + pairs[i])
+        if (insert_into_db) await createPgPairTable(pairs[i])
+        await trackPairData(pairs[i])
+        await sleep(wait_time) //let's be safe with the api biance calls
+    }
+    console.log('----')
 }
 sleep = (x) => {
     return new Promise(resolve => {
