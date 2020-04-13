@@ -156,7 +156,7 @@ async function trackPairData(pair) {
         candle_prices[pair].push(Number(candle.close))
 
         try {
-            await tulind.indicators.stochrsi.indicator([candle_closes[pair]], [100])
+            await tulind.indicators.stochrsi.indicator([candle_closes[pair]], [14])
                 .then((results) => {
                     srsi[pair] = new BigNumber(results[0][results[0].length - 1] * 100)
                 })
