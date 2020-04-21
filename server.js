@@ -20,8 +20,8 @@ console.log(`Your port is ${process.env.PORT}`); // 8626
 // Postgres conection set up
 const insert_into_db = true
     // to monitor your strategy you can send your buy and sell signals to http://bitcoinvsaltcoins.com
-const send_signal_to_bva = false
-const bva_key = "replace_with_your_BvA_key"
+const send_signal_to_bva = true
+const bva_key = "5e9f2e666afacb0cbb10f600"
 const tracked_max = 200
 const wait_time = 800
 const nbt_vers = "0.2.2"
@@ -84,6 +84,7 @@ async function run() {
     //pairs = await get_pairs()
     //pairs = pairs.slice(0, tracked_max)
     pairs.unshift('BTCBUSD')
+    pairs.unshift('BTCUSDT')
     pairs.unshift('ETHBTC')
     console.log(" ")
     console.log("Total pairs: " + pairs.length)
@@ -120,8 +121,8 @@ async function trackPairData(pair) {
     prev_price[pair] = 0
     srsi[pair] = null
 
-    const candles_15 = await binance_client.candles({ symbol: pair, interval: '15m' })
-    for (var i = 0, len = candles_15.length; i < len; i++) {
+    const candles_1 = await binance_client.candles({ symbol: pair, interval: '1m' })
+    for (var i = 0, len = candles_1.length; i < len; i++) {
         candle_closes[pair].push(Number(candles_15[i].close))
         candle_lowes[pair].push(Number(candles_15[i].low))
         candle_highs[pair].push(Number(candles_15[i].high))
@@ -132,7 +133,7 @@ async function trackPairData(pair) {
 
     await sleep(wait_time)
 
-    const candles_clean = binance_client.ws.candles(pair, '15m', async candle => {
+    const candles_clean = binance_client.ws.candles(pair, '1m', async candle => {
 
         if (candle.isFinal) {
             candle_opens[pair][candle_opens[pair].length - 1] = Number(candle.open)
